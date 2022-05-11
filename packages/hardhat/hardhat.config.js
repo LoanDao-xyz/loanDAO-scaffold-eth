@@ -288,6 +288,9 @@ module.exports = {
     deployer: {
       default: 0, // here this will by default take the first account as deployer
     },
+    member1: {
+      default: 1, // here this will by default take the second account as member1
+    },
   },
   etherscan: {
     apiKey: {
