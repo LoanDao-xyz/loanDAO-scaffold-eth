@@ -1,5 +1,3 @@
-import { Image } from "antd";
-
 const Splash = () => {
   return (
     <div
@@ -9,7 +7,7 @@ const Splash = () => {
         alignItems: "center",
       }}
     >
-      <Image
+      <img
         style={{ width: "100%" }}
         src="https://ipfs.io/ipfs/QmZTiEgrTYAuxXSQSX8A894P4c39hi5VinzDmpCU1FgDkE?filename=LoanDAOLogo.png"
       />
