@@ -1,4 +1,6 @@
 import Portis from "@portis/web3";
+import * as UAuthWeb3Modal from '@uauth/web3modal';
+import UAuthSPA from '@uauth/js';
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import Authereum from "authereum";
 import Fortmatic from "fortmatic";
@@ -18,6 +20,15 @@ const walletLinkProvider = walletLink.makeWeb3Provider(`https://eth-mainnet.alch
 /**
   Web3 modal helps us "connect" external wallets:
 **/
+
+export const uauthOptions = {
+  clientID: 'client_id',
+  redirectUri: 'http://localhost:3000',
+
+  // Must include both the openid and wallet scopes.
+  scope: 'openid wallet',
+}
+
 const web3ModalSetup = () =>
   new Web3Modal({
     network: "mainnet", // Optional. If using WalletConnect on xDai, change network to "xdai" and add RPC info below for xDai chain.
@@ -39,16 +50,18 @@ const web3ModalSetup = () =>
           },
         },
       },
-      portis: {
-        display: {
-          logo: "https://user-images.githubusercontent.com/9419140/128913641-d025bc0c-e059-42de-a57b-422f196867ce.png",
-          name: "Portis",
-          description: "Connect to Portis App",
-        },
-        package: Portis,
-        options: {
-          id: "6255fb2b-58c8-433b-a2c9-62098c05ddc9",
-        },
+      'custom-uauth': {
+        // The UI Assets
+        display: UAuthWeb3Modal.display,
+    
+        // The Connector
+        connector: UAuthWeb3Modal.connector,
+    
+        // The SPA libary
+        package: UAuthSPA,
+    
+        // The SPA libary options
+        options: uauthOptions,
       },
       fortmatic: {
         package: Fortmatic, // required
