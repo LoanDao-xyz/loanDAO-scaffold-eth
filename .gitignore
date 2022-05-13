@@ -5,6 +5,7 @@ packages/hardhat/*.txt
 
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 **/node_modules
+**/.log
 
 packages/hardhat/artifacts*
 packages/hardhat/deployments
