@@ -15,6 +15,8 @@ contract CommunityBankingToken is ERC721, ERC721Burnable, Ownable, EIP712, ERC72
 
     /// You cannot transfer a soulbound token
     error ForbiddenTransfer();
+    /// Account `account` is already a member
+    error AlreadyMember(address account);
 
     constructor()
         ERC721("CommunityBankingToken", "CBT")
@@ -22,6 +24,7 @@ contract CommunityBankingToken is ERC721, ERC721Burnable, Ownable, EIP712, ERC72
     {}
 
     function safeMint(address to) public onlyOwner {
+        if (balanceOf(to) > 0) revert AlreadyMember(to);
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
