@@ -31,9 +31,8 @@ export default function Events({ contracts, contractName, eventName, localProvid
         dataSource={events}
         renderItem={item => {
           return (
-            <List.Item key={item.blockNumber + "_" + item.args.sender + "_" + item.args.purpose}>
-              <Address address={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
-              {item.args[1]}
+            <List.Item key={item.blockNumber}>
+              {`IPFS CID: ${item.args[8]}`}
             </List.Item>
           );
         }}

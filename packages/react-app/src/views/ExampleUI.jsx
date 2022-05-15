@@ -159,7 +159,6 @@ export default function ExampleUI({
         contractName="YourContract"
         eventName="SetPurpose"
         localProvider={localProvider}
-        mainnetProvider={mainnetProvider}
         startBlock={1}
       />
 

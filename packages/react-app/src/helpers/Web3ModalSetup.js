@@ -1,4 +1,3 @@
-import Portis from "@portis/web3";
 import * as UAuthWeb3Modal from '@uauth/web3modal';
 import UAuthSPA from '@uauth/js';
 import WalletConnectProvider from "@walletconnect/web3-provider";
