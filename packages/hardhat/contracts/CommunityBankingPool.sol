@@ -7,9 +7,13 @@ import { ERC4626 } from "./solmate/mixins/ERC4626.sol";
 
 contract CommunityBankingPool is ERC4626, Ownable {
 
+    /// @dev The total number of internal debt units "distributed" amongst borrowers.
     uint256 totalInternalDebt;
 
-    mapping (address => uint256) internalDebt; // account => debt
+    /// @dev Maps user addresses to their debt, which are not denominated in underlying.
+    /// Instead, these values are denominated in internal debt units, which internally account
+    /// for user debt, increasing in value as the Pool earns more interest.
+    mapping(address => uint256) internal internalDebt;
 
     constructor(
         ERC20 _underlying,
@@ -58,8 +62,14 @@ contract CommunityBankingPool is ERC4626, Ownable {
     }
 
     /*///////////////////////////////////////////////////////////////
-                        INTEREST ACCRUAL LOGIC
+                          DEBT ACCOUNTING LOGIC
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice Returns the underlying borrow balance of an address.
+    /// @param user The user to get the underlying borrow balance of.
+    function borrowBalance(address user) public view returns (uint256) {
+        return internalDebt[user];
+    }
 
     /// @notice Returns the total amount of underlying tokens being loaned out to borrowers.
     function totalBorrows() public view returns (uint256) {

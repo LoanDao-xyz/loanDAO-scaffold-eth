@@ -1,7 +1,7 @@
 const hre = require("hardhat");
 const { use, expect, config } = require("chai");
 const { solidity } = require("ethereum-waffle");
-config.includeStack = true
+
 const deployGovernor = require("../deploy/03-deploy-community-banking-governor");
 
 use(solidity);
