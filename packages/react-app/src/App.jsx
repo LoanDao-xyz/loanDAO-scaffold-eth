@@ -29,7 +29,7 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph, Membership } from "./views";
+import { Home, ExampleUI, Hints, Subgraph, Membership, MembershipVote } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
@@ -91,10 +91,10 @@ function App(props) {
   ]);
   const mainnetProvider = useStaticJsonRPC(providers);
 
-  if (DEBUG) console.log(`Using ${selectedNetwork} network`);
+  // if (DEBUG) console.log(`Using ${selectedNetwork} network`);
 
   // 🛰 providers
-  if (DEBUG) console.log("📡 Connecting to Mainnet Ethereum");
+  // if (DEBUG) console.log("📡 Connecting to Mainnet Ethereum");
 
   const logoutOfWeb3Modal = async () => {
     await web3Modal.clearCachedProvider();
@@ -278,6 +278,9 @@ function App(props) {
         <Menu.Item key="/membership">
           <Link to="/membership">Membership</Link>
         </Menu.Item>
+        <Menu.Item key="/membershipvote">
+          <Link to="/membershipvote">Membership Vote</Link>
+        </Menu.Item>
       </Menu>
 
       <Switch>
@@ -384,6 +387,15 @@ function App(props) {
             writeContracts={writeContracts}
             readContracts={readContracts}
             purpose={purpose}
+          />
+        </Route>
+        <Route path="/membershipvote">
+          <MembershipVote
+            contracts={readContracts}
+            contractName={"CommunityBankingGovernor"}
+            eventName={"ProposalCreated"}
+            localProvider={localProvider}
+            startBlock={1}
           />
         </Route>
       </Switch>

@@ -9,12 +9,8 @@ const { ethers } = require("ethers");
 const { TextArea } = Input;
 
 function Membership({
-    purpose,
     address,
-    mainnetProvider,
     localProvider,
-    yourLocalBalance,
-    price,
     tx,
     readContracts,
     writeContracts,
@@ -22,8 +18,8 @@ function Membership({
 
   const [application, setApplication] = useState("");
   const tokenAddress = readContracts && readContracts.CommunityBankingToken ? readContracts.CommunityBankingToken.address : null;
-  const governorInterface = new ethers.utils.Interface(tokenABI);
-  const callData = address && governorInterface.encodeFunctionData("safeMint", [address])
+  const tokenInterface = new ethers.utils.Interface(tokenABI);
+  const callData = address && tokenInterface.encodeFunctionData("safeMint", [address])
 
   async function handleSubmit(e) {
     e.preventDefault()

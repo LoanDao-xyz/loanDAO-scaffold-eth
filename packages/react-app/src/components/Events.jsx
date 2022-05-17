@@ -1,6 +1,5 @@
 import { List } from "antd";
 import { useEventListener } from "eth-hooks/events/useEventListener";
-import Address from "./Address";
 
 /**
   ~ What it does? ~
@@ -19,7 +18,7 @@ import Address from "./Address";
   />
 **/
 
-export default function Events({ contracts, contractName, eventName, localProvider, mainnetProvider, startBlock }) {
+export default function Events({ contracts, contractName, eventName, localProvider, startBlock }) {
   // 📟 Listen for broadcast events
   const events = useEventListener(contracts, contractName, eventName, localProvider, startBlock);
 
@@ -31,8 +30,8 @@ export default function Events({ contracts, contractName, eventName, localProvid
         dataSource={events}
         renderItem={item => {
           return (
-            <List.Item key={item.blockNumber}>
-              {`IPFS CID: ${item.args[8]}`}
+            <List.Item key={item.args[0]}>
+              {`Prposal Id: ${item.args[0]} Proposer: ${item.args[1]} start: ${item.args[6]} end: ${item.args[7]} IPFS CID: ${item.args[8]}`}
             </List.Item>
           );
         }}
