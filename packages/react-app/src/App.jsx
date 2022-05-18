@@ -391,7 +391,9 @@ function App(props) {
         </Route>
         <Route path="/membershipvote">
           <MembershipVote
-            contracts={readContracts}
+            tx={tx}
+            writeContracts={writeContracts}
+            readContracts={readContracts}
             contractName={"CommunityBankingGovernor"}
             eventName={"ProposalCreated"}
             localProvider={localProvider}
