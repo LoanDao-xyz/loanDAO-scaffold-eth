@@ -29,7 +29,7 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph, Membership, MembershipVote } from "./views";
+import { Home, ExampleUI, Hints, Subgraph, Membership, Governance } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
@@ -278,8 +278,8 @@ function App(props) {
         <Menu.Item key="/membership">
           <Link to="/membership">Membership</Link>
         </Menu.Item>
-        <Menu.Item key="/membershipvote">
-          <Link to="/membershipvote">Membership Vote</Link>
+        <Menu.Item key="/governance">
+          <Link to="/governance">Governance</Link>
         </Menu.Item>
       </Menu>
 
@@ -389,8 +389,8 @@ function App(props) {
             purpose={purpose}
           />
         </Route>
-        <Route path="/membershipvote">
-          <MembershipVote
+        <Route path="/governance">
+          <Governance
             tx={tx}
             writeContracts={writeContracts}
             readContracts={readContracts}

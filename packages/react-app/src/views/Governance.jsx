@@ -4,7 +4,7 @@ import { useEventListener } from "eth-hooks/events/useEventListener";
 import { getFromIPFS } from '../helpers/ipfs';
 import { Button } from "antd";
 
-export default function MembershipVote({tx, writeContracts, readContracts, contractName, eventName, localProvider, startBlock }) {
+export default function Governance({tx, writeContracts, readContracts, contractName, eventName, localProvider, startBlock }) {
   const [eventsWithState, setEventsWithState] = useState([]);
   // 📟 Listen for broadcast events
   const events = useEventListener(readContracts, contractName, eventName, localProvider, startBlock);
@@ -61,7 +61,7 @@ export default function MembershipVote({tx, writeContracts, readContracts, contr
 
   return (
     <div style={{ width: "100%", margin: "auto", marginTop: 32, paddingBottom: 32 }}>
-      <h2>Membership Proposals:</h2>
+      <h2>Proposals:</h2>
       <List
         bordered
         dataSource={eventsWithState}
