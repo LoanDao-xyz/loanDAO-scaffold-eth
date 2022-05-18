@@ -8,7 +8,7 @@ import { Events } from "../components";
 const { ethers } = require("ethers");
 const { TextArea } = Input;
 
-function Membership({
+function Loan({
     address,
     localProvider,
     tx,
@@ -39,26 +39,25 @@ function Membership({
     <div>
       <form onSubmit={handleSubmit}>
         <h3>Please describe why you want to join the DAO and why you can be trusted to repay loads:</h3>
-        <ul style={{ listStyleType: "none"}}>
-        <li>
-          <TextArea
-            style={{width: '90%'}}
-            rows={12}
-            onChange={e => {
-              setApplication(e.target.value);
+        <TextArea
+          style={{width: '90%'}}
+          rows={12}
+          onChange={e => {
+            setApplication(e.target.value);
           }}
         />
-        </li>
-        <li>
-        <button type="Submit"
-                style={{marginTop: '1%'}}>
-                  Submit
-         </button>
-        </li>
-        </ul>
+        <button type="Submit">Submit</button>
       </form>
+
+      <Events
+        contracts={readContracts}
+        contractName="CommunityBankingGovernor"
+        eventName="ProposalCreated"
+        localProvider={localProvider}
+        startBlock={1}
+      />
     </div>
   );
 }
 
-export default Membership;
+export default Loan;
