@@ -3,14 +3,12 @@ import { useState } from "react";
 import { ipfs } from "../helpers/ipfs";
 import { Input } from "antd";
 import tokenABI from "../contracts/ABI/CommunityBankingToken.json";
-import { Events } from "../components";
 
 const { ethers } = require("ethers");
 const { TextArea } = Input;
 
 function Membership({
     address,
-    localProvider,
     tx,
     readContracts,
     writeContracts,

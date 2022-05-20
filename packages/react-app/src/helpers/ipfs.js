@@ -19,3 +19,12 @@ export async function getFromIPFS(hashToGet) {
     return content;
   }
 }
+
+export async function getObjectFromIPFS(hashToGet) {
+  for await (const file of ipfs.cat(hashToGet)) {
+    const content = JSON.parse(new BufferList(file));
+
+    return content;
+  }
+}
+

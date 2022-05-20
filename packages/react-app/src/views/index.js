@@ -4,3 +4,4 @@ export { default as Hints } from "./Hints";
 export { default as Subgraph } from "./Subgraph";
 export { default as Membership } from "./Membership";
 export { default as Governance } from "./Governance";
+export { default as Loan } from "./Loan";
