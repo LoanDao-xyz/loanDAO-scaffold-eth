@@ -1,11 +1,24 @@
 /* eslint-disable prettier/prettier */
 import { useState } from "react";
 import { ipfs } from "../helpers/ipfs";
-import { Input } from "antd";
+import { Form, Input, Button, Typography } from 'antd';
 import tokenABI from "../contracts/ABI/CommunityBankingToken.json";
 
 const { ethers } = require("ethers");
-const { TextArea } = Input;
+const { Title } = Typography;
+
+const validateMessages = {
+  required: '${label} is required!',
+};
+
+const layout = {
+  labelCol: {
+    span: 8,
+  },
+  wrapperCol: {
+    span: 8,
+  },
+};
 
 function Membership({
     address,
@@ -14,14 +27,12 @@ function Membership({
     writeContracts,
   }) {
 
-  const [application, setApplication] = useState("");
   const tokenAddress = readContracts && readContracts.CommunityBankingToken ? readContracts.CommunityBankingToken.address : null;
   const tokenInterface = new ethers.utils.Interface(tokenABI);
   const callData = address && tokenInterface.encodeFunctionData("safeMint", [address])
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    const {path}  = await ipfs.add(application);
+  async function onFinish(values) {
+    const {path}  = await ipfs.add(values.application);
     
     const result = tx(writeContracts.CommunityBankingGovernor.propose(
         [tokenAddress],
@@ -35,26 +46,25 @@ function Membership({
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
-        <h3>Please describe why you want to join the DAO and why you can be trusted to repay loads:</h3>
-        <ul style={{ listStyleType: "none"}}>
-        <li>
-          <TextArea
-            style={{width: '90%'}}
-            rows={12}
-            onChange={e => {
-              setApplication(e.target.value);
-          }}
-        />
-        </li>
-        <li>
-        <button type="Submit"
-                style={{marginTop: '1%'}}>
-                  Submit
-         </button>
-        </li>
-        </ul>
-      </form>
+      <Title>Apply for a Membership:</Title>
+      <Form {...layout} name="membership-application" onFinish={onFinish} validateMessages={validateMessages}>
+        <Form.Item 
+          name={['application']} 
+          label="Please describe why you want to join the DAO and why you can be trusted to repay loans:"
+          rules={[
+            {
+              required: true,
+            },
+          ]}
+          >
+          <Input.TextArea />
+        </Form.Item>
+        <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
+          <Button type="primary" htmlType="submit">
+            Submit
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
   );
 }

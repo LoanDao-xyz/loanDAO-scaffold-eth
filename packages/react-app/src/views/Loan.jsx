@@ -1,5 +1,4 @@
-import { Form, Input, Button } from 'antd';
-import { Typography } from 'antd';
+import { Form, Input, Button, Typography } from 'antd';
 import { ipfs } from "../helpers/ipfs";
 import poolABI from "../contracts/ABI/CommunityBankingPool.json";
 
