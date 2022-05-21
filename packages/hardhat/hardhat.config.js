@@ -706,7 +706,7 @@ task("setup", "Setup a sandbox environment for an account")
       communityPool: cbp.address,
       superfluidHost: sf.settings.config.hostAddress,
       fDAI: fDAIAddress,
-      fDAIx: fDAI.address,
+      fDAIx: fDAIx.address,
       accountBalance: amountToMint.toString(),
     };
 
