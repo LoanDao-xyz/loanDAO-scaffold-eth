@@ -1,6 +1,7 @@
 const hre = require("hardhat");
 const { use, expect, config } = require("chai");
 const { solidity } = require("ethereum-waffle");
+const { Framework } = require("@superfluid-finance/sdk-core");
 
 const deployGovernor = require("../deploy/03-deploy-community-banking-governor");
 
@@ -45,7 +46,7 @@ describe("CommunityBankingGovernor", function() {
     const setup = hre.deployments.createFixture(async function() {
       await hre.deployments.fixture(["CommunityBankingToken", "CommunityBankingPool"]);
 
-      const { member1 } = await hre.ethers.getNamedSigners();
+      const { deployer, member1 } = await hre.ethers.getNamedSigners();
       const [member2, member3, member4, ...nonMembers] = await hre.ethers.getUnnamedSigners();
       const genesisMembers = [member1, member2, member3, member4];
       // Deploy the governor and mint the membership tokens to the genesis members
@@ -55,11 +56,26 @@ describe("CommunityBankingGovernor", function() {
       await Promise.all(genesisMembers.map(async m => cbt.connect(m).delegate(m.address)));
 
       const cbp = await hre.ethers.getContract("CommunityBankingPool", member1);
-      const dai = await hre.ethers.getContract("MockERC20", member1);
-      await dai.mint(cbp.address, hre.ethers.utils.parseEther("1000.0"));
+      //initialize the superfluid framework...put custom and web3: only bc we are using hardhat locally
+      const sf = await Framework.create({
+        networkName: "custom",
+        provider: hre.ethers.provider,
+        dataMode: "WEB3_ONLY",
+        resolverAddress: process.env.RESOLVER_ADDRESS, //this is how you get the resolver address
+        protocolReleaseVersion: "test",
+      });
+      // use the framework to get the super token
+      const fDAIx = await sf.loadSuperToken("fDAIx");
+      const fDAIAddress = fDAIx.underlyingToken.address;
+      const fDAI = await hre.ethers.getContractAt("MockERC20", fDAIAddress, deployer.address);
+      const amountToMint = hre.ethers.utils.parseEther("1000.0");
+      await fDAI.mint(cbp.address, amountToMint);
+      await fDAI.connect(member1).approve(fDAIx.address, hre.ethers.constants.MaxUint256);
+      await fDAIx.upgrade({ amount: amountToMint.toHexString() }).exec(member1);
+      await fDAIx.approve({ receiver: cbp.address, amount: hre.ethers.constants.MaxUint256.toHexString() }).exec(member1);
 
       const cbg = await hre.ethers.getContract("CommunityBankingGovernor", member1);
-      return { cbt, cbg, cbp, dai, genesisMembers, nonMembers };
+      return { cbt, cbg, cbp, fDAIx, genesisMembers, nonMembers };
     });
 
     it("should correctly follow the governance process to add a new member", async function() {
@@ -96,7 +112,7 @@ describe("CommunityBankingGovernor", function() {
     });
 
     it("should correctly follow the governance process to create a loan", async function() {
-      const { cbg, cbp, dai, genesisMembers } = await setup();
+      const { cbg, cbp, fDAIx, genesisMembers } = await setup();
       const [member1] = genesisMembers;
 
       // Step 1: Ask the DAO for a loan
@@ -124,7 +140,7 @@ describe("CommunityBankingGovernor", function() {
       const currentBlockNumber2 = await hre.ethers.provider.getBlockNumber();
       await hre.timeAndMine.mine(endBlock - currentBlockNumber2 + 1);
       await expect(cbg.execute(targets, [0], calldatas, hre.ethers.utils.id(description))).to.emit(cbp, "Borrow").withArgs(member1.address, amount);
-      expect(await dai.balanceOf(member1.address)).to.eq(amount)
+      expect(await fDAIx.balanceOf({ account: member1.address })).to.eq(amount)
     });
   });
 });

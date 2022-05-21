@@ -5,6 +5,7 @@ const chalk = require("chalk");
 
 require("@nomiclabs/hardhat-waffle");
 require("@tenderly/hardhat-tenderly");
+require("@nomiclabs/hardhat-web3");
 
 require("hardhat-deploy");
 require("hardhat-gas-reporter");
@@ -263,7 +264,7 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.8.4",
+        version: "0.8.13",
         settings: {
           optimizer: {
             enabled: true,
