@@ -15,6 +15,8 @@ require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("@atixlabs/hardhat-time-n-mine");
 
+const { Framework } = require("@superfluid-finance/sdk-core");
+
 const { isAddress, getAddress, formatUnits, parseUnits } = utils;
 
 /*
@@ -618,4 +620,77 @@ task("send", "Send ETH")
     debug(JSON.stringify(txRequest, null, 2));
 
     return send(fromSigner, txRequest);
+  });
+
+task("setup", "Setup a sandbox environment for an account")
+  .addParam("address", "The account's address")
+  .setAction(async function(args, hre) {
+    const { deployer } = await hre.ethers.getNamedSigners();
+
+    const sf = await Framework.create({
+      networkName: "custom",
+      provider: hre.ethers.provider,
+      dataMode: "WEB3_ONLY",
+      resolverAddress: process.env.RESOLVER_ADDRESS, //this is how you get the resolver address
+      protocolReleaseVersion: "test",
+    });
+    // use the framework to get the super token
+    const fDAIx = await sf.loadSuperToken("fDAIx");
+    const fDAIAddress = fDAIx.underlyingToken.address;
+    const fDAI = await hre.ethers.getContractAt("MockERC20", fDAIAddress, deployer.address);
+
+    const cbp = await hre.ethers.getContract("CommunityBankingPool");
+
+    // Add some funds to the pool if empty
+    const poolBalance = await fDAIx.balanceOf({ account: cbp.address, providerOrSigner: deployer }).then(hre.ethers.BigNumber.from);
+    if (poolBalance.isZero) {
+      const baseAmount = hre.ethers.utils.parseEther("1000000.0");
+      await fDAI.mint(deployer.address, baseAmount);
+      await fDAI.approve(fDAIx.address, hre.ethers.constants.MaxUint256);
+      await fDAIx.upgrade({ amount: baseAmount.toHexString() }).exec(deployer);
+      await fDAIx.approve({ receiver: cbp.address, amount: hre.ethers.constants.MaxUint256.toHexString() }).exec(deployer);
+      await fDAIx.transfer({ receiver: cbp.address, amount: baseAmount.toString() }).exec(deployer);
+    }
+
+    // Setup account
+    // Start impersonating account
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [args.address],
+    });
+    const account = await hre.ethers.getSigner(args.address);
+    const amountToMint = hre.ethers.utils.parseEther("1000.0");
+    await fDAI.mint(account.address, amountToMint);
+    await fDAI.connect(account).approve(fDAIx.address, hre.ethers.constants.MaxUint256);
+    await fDAIx.upgrade({ amount: amountToMint.toHexString() }).exec(account);
+    await fDAIx.approve({ receiver: cbp.address, amount: hre.ethers.constants.MaxUint256.toHexString() }).exec(account);
+    // Authorize the Pool as flow operator
+    await sf.cfaV1.updateFlowOperatorPermissions({
+      flowOperator: cbp.address,
+      permissions: 5, // Create and Delete
+      flowRateAllowance: "39614081257132168796771975167", // type(int96).max
+      superToken: fDAIx.address,
+    }).exec(account);
+
+    // Stop impersonating account
+    await hre.network.provider.request({
+      method: "hardhat_stopImpersonatingAccount",
+      params: [args.address],
+    });
+
+    const cbt = await hre.ethers.getContract("CommunityBankingToken");
+    const cbg = await hre.ethers.getContract("CommunityBankingGovernor");
+
+    const summary = {
+      communityToken: cbt.address,
+      communityGovernor: cbg.address,
+      communityPool: cbp.address,
+      superfluidHost: sf.settings.config.hostAddress,
+      fDAI: fDAIAddress,
+      fDAIx: fDAI.address,
+      accountBalance: amountToMint.toString(),
+    };
+
+    console.log("📢 account setup");
+    console.log(summary);
   });

@@ -302,7 +302,7 @@ function App(props) {
             */}
 
           <Contract
-            name="YourContract"
+            name="CommunityBankingPool"
             price={price}
             signer={userSigner}
             provider={localProvider}
@@ -407,14 +407,14 @@ function App(props) {
           />
         </Route>
         <Route path="/loan">
-          <Loan 
+          <Loan
             tx={tx}
             writeContracts={writeContracts}
             address={address}
           />
         </Route>
         <Route path="/position">
-          <Position 
+          <Position
             tx={tx}
             readContracts={readContracts}
             writeContracts={writeContracts}
