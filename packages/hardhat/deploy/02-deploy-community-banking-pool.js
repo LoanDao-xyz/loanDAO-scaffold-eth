@@ -1,3 +1,6 @@
+const fs = require("fs/promises");
+const path = require("path");
+
 // Step 2: We deploy the community banking pool
 async function deployCommunityPool(hre) {
   const { deployer } = await hre.getNamedAccounts();
@@ -49,6 +52,10 @@ async function deployCommunityPool(hre) {
       symbol: "pDAI",
       sfHost: sf.settings.config.hostAddress,
     };
+
+    // Save the Superfluid config to .env
+    const dotenvPath = path.join(__dirname, "../.env");
+    await fs.writeFile(dotenvPath, `SF_RESOLVER_ADDRESS=${process.env.RESOLVER_ADDRESS}`, { encoding: "utf8" });
   } else {
     // FIXME: get underlying token from process.env instead ?
     config = {

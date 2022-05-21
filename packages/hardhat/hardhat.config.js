@@ -627,11 +627,17 @@ task("setup", "Setup a sandbox environment for an account")
   .setAction(async function(args, hre) {
     const { deployer } = await hre.ethers.getNamedSigners();
 
+    // Send ether to account
+    await deployer.sendTransaction({
+      to: args.address,
+      value: hre.ethers.utils.parseEther("1.0"),
+    });
+
     const sf = await Framework.create({
       networkName: "custom",
       provider: hre.ethers.provider,
       dataMode: "WEB3_ONLY",
-      resolverAddress: process.env.RESOLVER_ADDRESS, //this is how you get the resolver address
+      resolverAddress: process.env.SF_RESOLVER_ADDRESS,
       protocolReleaseVersion: "test",
     });
     // use the framework to get the super token
