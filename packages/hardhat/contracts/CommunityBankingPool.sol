@@ -13,7 +13,7 @@ import { FixedPointMathLib } from "./solmate/utils/FixedPointMathLib.sol";
 import { SafeCastLib } from "./solmate/utils/SafeCastLib.sol";
 import { Maths } from "./utils/Maths.sol";
 
-contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownable, SuperAppBase {
+contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
 
     using Maths for uint256;
     using FixedPointMathLib for uint256;
@@ -39,8 +39,6 @@ contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownab
             _sfHost,
             IConstantFlowAgreementV1(address(_sfHost.getAgreementClass(CFA_ID)))
         );
-        // Register Superfluid SuperApp
-        _sfHost.registerApp(CONFIG_WORD);
     }
 
     /*//////////////////////////////////////////////////////////////
