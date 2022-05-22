@@ -1,6 +1,8 @@
 const fs = require("fs/promises");
 const path = require("path");
 
+const helperConfig = require("../helper.config");
+
 // Step 2: We deploy the community banking pool
 async function deployCommunityPool(hre) {
   const { deployer } = await hre.getNamedAccounts();
@@ -57,12 +59,15 @@ async function deployCommunityPool(hre) {
     const dotenvPath = path.join(__dirname, "../.env");
     await fs.writeFile(dotenvPath, `SF_RESOLVER_ADDRESS=${process.env.RESOLVER_ADDRESS}`, { encoding: "utf8" });
   } else {
-    // FIXME: get underlying token from process.env instead ?
+    const c = helperConfig[hre.network.name];
+
+    if (!c) throw Error(`Unknown Network ${hre.network.name}`);
+
     config = {
-      asset: hre.ethers.constants.AddressZero,
-      name: "",
-      symbol: "",
-      sfHost: hre.ethers.constants.AddressZero,
+      asset: c.superfluid.fDAIx,
+      name: "DAI Pool",
+      symbol: "pDAI",
+      sfHost: c.superfluid.host,
     };
   }
 

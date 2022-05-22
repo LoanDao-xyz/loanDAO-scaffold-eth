@@ -12,7 +12,7 @@ contract CommunityBankingGovernor is Governor, GovernorSettings, GovernorCountin
 
     constructor(CommunityBankingToken _token, address[] memory genesisMembers)
         Governor("CommunityBankingGovernor")
-        GovernorSettings(1 /* 1 block */, 2 /* 2 block */, 0)
+        GovernorSettings(1 /* 1 block */, 10 /* 10 block */, 0)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
     {
