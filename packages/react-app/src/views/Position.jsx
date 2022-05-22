@@ -1,9 +1,9 @@
-import { Descriptions, Form, Input, Button } from "antd";
-import { Address } from "../components";
+import { List, Form, Input, Button, Descriptions, Typography } from "antd";
 import { useContractReader } from "eth-hooks";
+import { useState, useEffect } from "react";
 
+const { Title } = Typography;
 const { ethers } = require("ethers");
-const BigNumber = require('bignumber.js');
 
 const layout = {
   labelCol: {
@@ -20,10 +20,24 @@ const validateMessages = {
 };
 /* eslint-enable no-template-curly-in-string */
 
-function Position({ address, blockExplorer, tx, readContracts, writeContracts }) {
+function Position({ address, tx, readContracts, writeContracts }) {
+  const [cashflowsState, setCashflowsState] = useState([]);
+
   const cashflows = useContractReader(readContracts, "CommunityBankingPool", "cashflows", [address]);
-  const amount = new BigNumber(cashflows.params[0].amount._hex);
-  console.log(amount.toString())
+
+  useEffect(() => {
+    if (cashflows?.length) {
+      const [ids, params] = cashflows;
+      const arr = [];
+      for (let i = 0; i < ids.length; i++) {
+        const cfId = ids[i].toString();
+        const amount = ethers.utils.formatEther(params[i].amount.toString());
+        const cashflow = { cfId, amount };
+        arr.push(cashflow);
+      }
+      setCashflowsState(arr);
+    }
+  }, [cashflows]);
 
   const deposit = async values => {
     const result = tx(writeContracts.CommunityBankingPool.deposit(values.amount), update => {
@@ -45,8 +59,8 @@ function Position({ address, blockExplorer, tx, readContracts, writeContracts })
     console.log(await result);
   };
 
-  const withdraw = async values => {
-    const result = tx(writeContracts.CommunityBankingPool.withdraw(values.cfId), update => {
+  const withdraw = async cfId => {
+    const result = tx(writeContracts.CommunityBankingPool.withdraw(cfId), update => {
       console.log("📡 Transaction Update:", update);
       if (update && (update.status === "confirmed" || update.status === 1)) {
         console.log(" 🍾 Transaction " + update.hash + " finished!");
@@ -67,13 +81,23 @@ function Position({ address, blockExplorer, tx, readContracts, writeContracts })
 
   return (
     <div>
-      <Descriptions title="User Info">
-        <Descriptions.Item label="Address">
-          <Address address={address} blockExplorer={blockExplorer} fontSize={20} />
-        </Descriptions.Item>
-        <Descriptions.Item label="Positions"></Descriptions.Item>
-      </Descriptions>
-
+      <Title>Cashflow</Title>
+      <List
+        bordered
+        dataSource={cashflowsState}
+        renderItem={({ cfId, amount }) => {
+          return (
+            <List.Item>
+              <Descriptions>
+                <Descriptions.Item label="Cashflow Id">{cfId}</Descriptions.Item>
+                <Descriptions.Item label="Deposit Amount">{amount}</Descriptions.Item>
+              </Descriptions>
+              <Button onClick={() => withdraw(cfId)}>Withdraw</Button>
+            </List.Item>
+          );
+        }}
+      />
+      <Title>Deposit</Title>
       <Form {...layout} name="deposit" onFinish={deposit} validateMessages={validateMessages}>
         <Form.Item
           name={["amount"]}
@@ -89,25 +113,6 @@ function Position({ address, blockExplorer, tx, readContracts, writeContracts })
         <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
           <Button type="primary" htmlType="submit">
             Deposit
-          </Button>
-        </Form.Item>
-      </Form>
-
-      <Form {...layout} name="withdraw" onFinish={withdraw} validateMessages={validateMessages}>
-        <Form.Item
-          name={["cfId"]}
-          label="CFID of stream to withdraw"
-          rules={[
-            {
-              required: true,
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
-          <Button type="primary" htmlType="submit">
-            Withdraw
           </Button>
         </Form.Item>
       </Form>
