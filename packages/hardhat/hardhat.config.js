@@ -628,6 +628,7 @@ task("setup", "Setup a sandbox environment for an account")
     const { deployer } = await hre.ethers.getNamedSigners();
 
     // Send ether to account
+    console.log(`📢 Sending 1 Ether to ${args.address}`);
     await deployer.sendTransaction({
       to: args.address,
       value: hre.ethers.utils.parseEther("1.0"),
@@ -651,26 +652,37 @@ task("setup", "Setup a sandbox environment for an account")
     const poolBalance = await fDAIx.balanceOf({ account: cbp.address, providerOrSigner: deployer }).then(hre.ethers.BigNumber.from);
     if (poolBalance.isZero) {
       const baseAmount = hre.ethers.utils.parseEther("1000000.0");
+      console.log("📢 Minting 1000000 fDAI to the deployer");
       await fDAI.mint(deployer.address, baseAmount);
+      console.log("📢 Approving transfers from fDAIx for deployer");
       await fDAI.approve(fDAIx.address, hre.ethers.constants.MaxUint256);
+      console.log("📢 Upgrading all deployer's fDAI to fDAIx");
       await fDAIx.upgrade({ amount: baseAmount.toHexString() }).exec(deployer);
+      console.log("📢 Approving transfers from fDAIx for deployer");
       await fDAIx.approve({ receiver: cbp.address, amount: hre.ethers.constants.MaxUint256.toHexString() }).exec(deployer);
+      console.log("📢 Transfering all deployer's fDAIx to the Pool");
       await fDAIx.transfer({ receiver: cbp.address, amount: baseAmount.toString() }).exec(deployer);
     }
 
     // Setup account
     // Start impersonating account
+    console.log(`📢 Start impersonating ${args.address} to make transactions without its privateKey`);
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [args.address],
     });
     const account = await hre.ethers.getSigner(args.address);
     const amountToMint = hre.ethers.utils.parseEther("1000.0");
+    console.log("📢 Minting 1000 fDAI to your account");
     await fDAI.mint(account.address, amountToMint);
+    console.log("📢 Approving transfers from fDAIx for your account");
     await fDAI.connect(account).approve(fDAIx.address, hre.ethers.constants.MaxUint256);
+    console.log("📢 Upgrading all deployer's fDAI to fDAIx");
     await fDAIx.upgrade({ amount: amountToMint.toHexString() }).exec(account);
+    console.log("📢 Approving transfers from fDAIx for your account");
     await fDAIx.approve({ receiver: cbp.address, amount: hre.ethers.constants.MaxUint256.toHexString() }).exec(account);
     // Authorize the Pool as flow operator
+    console.log("📢 Authorizing the Pool to manage your Superfluid streams");
     await sf.cfaV1.updateFlowOperatorPermissions({
       flowOperator: cbp.address,
       permissions: 5, // Create and Delete
@@ -679,6 +691,7 @@ task("setup", "Setup a sandbox environment for an account")
     }).exec(account);
 
     // Stop impersonating account
+    console.log("📢 Stop impersonating your account");
     await hre.network.provider.request({
       method: "hardhat_stopImpersonatingAccount",
       params: [args.address],
@@ -693,10 +706,10 @@ task("setup", "Setup a sandbox environment for an account")
       communityPool: cbp.address,
       superfluidHost: sf.settings.config.hostAddress,
       fDAI: fDAIAddress,
-      fDAIx: fDAI.address,
+      fDAIx: fDAIx.address,
       accountBalance: amountToMint.toString(),
     };
 
-    console.log("📢 account setup");
+    console.log("📢 Account setup");
     console.log(summary);
   });
