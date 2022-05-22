@@ -28,6 +28,7 @@ contract CommunityBankingToken is ERC721, ERC721Burnable, Ownable, EIP712, ERC72
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
+        _delegate(to, to);
     }
 
     // The following functions are overrides required by Solidity.

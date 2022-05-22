@@ -51,9 +51,9 @@ describe("CommunityBankingGovernor", function() {
       const genesisMembers = [member1, member2, member3, member4];
       // Deploy the governor and mint the membership tokens to the genesis members
       await deployGovernor(hre, { genesisMembers: genesisMembers.map(s => s.address) });
-      // Delegate their voting power to themselves
       const cbt = await hre.ethers.getContract("CommunityBankingToken", member1);
-      await Promise.all(genesisMembers.map(async m => cbt.connect(m).delegate(m.address)));
+      // Delegate their voting power to themselves
+      // await Promise.all(genesisMembers.map(async m => cbt.connect(m).delegate(m.address)));
 
       const cbp = await hre.ethers.getContract("CommunityBankingPool", member1);
       //initialize the superfluid framework...put custom and web3: only bc we are using hardhat locally
