@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { List, Layout, Space } from "antd";
 import { useEventListener } from "eth-hooks/events/useEventListener";
+import { ethers } from "ethers";
 import { getFromIPFS, getObjectFromIPFS } from "../helpers/ipfs";
 import { Button } from "antd";
 
@@ -24,7 +25,7 @@ export default function Governance({
     readContracts && readContracts.CommunityBankingPool ? readContracts.CommunityBankingPool.address : null;
 
   useEffect(
-    async function () {
+    async function() {
       if (events?.length) {
         const res = await Promise.all(
           events.map(async event => {
@@ -76,6 +77,12 @@ export default function Governance({
     console.log(await result);
   }
 
+  async function execute(targets, calldatas, description) {
+    const result = tx(writeContracts.CommunityBankingGovernor.execute(targets, [0], calldatas, ethers.utils.id(description)));
+    console.log("awaiting metamask/web3 confirm result...", result);
+    console.log(await result);
+  }
+
   return (
     <div style={{ width: "100%", margin: "auto", marginTop: 32, paddingBottom: 32 }}>
       <h2>Proposals:</h2>
@@ -100,6 +107,15 @@ export default function Governance({
                     <Button onClick={() => castVote(event.args[0], 0)}>Nay</Button>
                     <Button onClick={() => castVote(event.args[0], 2)}>Abstain</Button>
                   </Space>
+                )}
+                {state && state === "Succeeded" && (
+                  <Button onClick={() => {
+                    execute(
+                      event.args["targets"],
+                      event.args["calldatas"],
+                      event.args["description"],
+                    );
+                  }}>Execute</Button>
                 )}
               </ul>
             </List.Item>
