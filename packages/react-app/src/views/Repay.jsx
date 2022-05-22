@@ -48,7 +48,7 @@ function Repay({ address, tx, readContracts, writeContracts }) {
 
   return (
     <div>
-      <Title>Cashflow</Title>
+      <Title>Cashflows on Loans</Title>
       <List
         bordered
         dataSource={cashflowsState}

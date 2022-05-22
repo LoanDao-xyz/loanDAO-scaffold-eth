@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { List, Layout, Slider } from "antd";
+import { List, Layout, Space } from "antd";
 import { useEventListener } from "eth-hooks/events/useEventListener";
 import { getFromIPFS, getObjectFromIPFS } from "../helpers/ipfs";
 import { Button } from "antd";
@@ -95,11 +95,11 @@ export default function Governance({
                 {event.args[2] == poolAddress && <li>{`Amount: ${ipfsObject.loan.amount}`}</li>}
                 {event.args[2] == poolAddress && <li>{`Loan Justification: ${ipfsObject.loan.description}`}</li>}
                 {state && state == "Active" && (
-                  <div>
+                  <Space size={10}>
                     <Button onClick={() => castVote(event.args[0], 1)}>Yea</Button>
                     <Button onClick={() => castVote(event.args[0], 0)}>Nay</Button>
                     <Button onClick={() => castVote(event.args[0], 2)}>Abstain</Button>
-                  </div>
+                  </Space>
                 )}
               </ul>
             </List.Item>

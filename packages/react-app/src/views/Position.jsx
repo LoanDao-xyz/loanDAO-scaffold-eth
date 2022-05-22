@@ -83,7 +83,7 @@ function Position({ address, tx, readContracts, writeContracts }) {
 
   return (
     <div>
-      <Title>Cashflow</Title>
+      <Title>Cashflows on Deposits</Title>
       <List
         bordered
         dataSource={cashflowsState}
