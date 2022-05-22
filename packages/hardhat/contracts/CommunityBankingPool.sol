@@ -68,6 +68,11 @@ contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownab
     function withdraw(uint256 cfId) external {
         // Transfer the CF amount to target
         CFParams memory params = cfParams[cfId];
+        // CF should be a lp position
+        if (params.cfType != CFType.LPPosition) {
+            revert InvalidCFType();
+        }
+        // Transfer amount back to the CF target
         ASSET.transferFrom(address(this), params.target, params.amount);
         // Delete the CF
         deleteCF(cfId);
@@ -103,6 +108,10 @@ contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownab
 
     function repay(uint256 cfId) external {
         CFParams memory params = cfParams[cfId];
+        // CF should be a loan
+        if (params.cfType != CFType.Loan) {
+            revert InvalidCFType();
+        }
         // Subtract to the total borrowed amount
         totalInternalDebt -= params.amount;
         // Calculate the borrow balance
@@ -135,7 +144,7 @@ contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownab
         Loan
     }
 
-        struct CFParams {
+    struct CFParams {
         /// @dev The type of Cashflow
         CFType cfType;
         /// @dev The amount of underlying token
@@ -155,6 +164,8 @@ contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownab
 
     /// You cannot transfer this Cashflow
     error ForbiddenTransfer();
+    /// Wrong CashFlow type
+    error InvalidCFType();
 
     /// @dev To create a CF
     function createCF(CFParams memory params) internal returns (uint256 cfId) {
@@ -211,6 +222,10 @@ contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownab
 
     function borrowBalance(uint256 cfId) public view returns (uint256) {
         CFParams memory params = cfParams[cfId];
+        // CF should be a loan
+        if (params.cfType != CFType.Loan) {
+            return 0;
+        }
         uint256 alreadyRepaidAmount = streamedAmount(params.target, address(this));
         return params.amount.subMin0(alreadyRepaidAmount);
     }
@@ -262,23 +277,6 @@ contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownab
         SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP;
     ISuperfluid immutable SF_HOST;
     CFAv1Library.InitData cfaV1;
-
-//    /// @dev Maps loan ids to agreement ids
-//    mapping (uint256 => bytes32) agreementIdByLoan;
-//
-//    modifier onlyHost() {
-//        require(
-//            msg.sender == address(cfaV1Lib.host),
-//            "RedirectAll: support only one host"
-//        );
-//        _;
-//    }
-//
-//    modifier onlyExpected(ISuperToken superToken, address agreementClass) {
-//        require(_isSameToken(superToken), "RedirectAll: not accepted token");
-//        require(_isCFAv1(agreementClass), "RedirectAll: only CFAv1 supported");
-//        _;
-//    }
 
     function streamedAmount(address sender, address receiver) internal view returns (uint256) {
         (uint256 timestamp, int96 flowRate, ,) = cfaV1.cfa.getFlow(ASSET, sender, receiver);
@@ -341,55 +339,6 @@ contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownab
             new bytes(0)
         );
     }
-
-//   function _isSameToken(ISuperToken superToken) private view returns (bool) {
-//       return address(superToken) == address(asset);
-//   }
-
-//   function _isCFAv1(address agreementClass) private view returns (bool) {
-//       return ISuperAgreement(agreementClass).agreementType() == CFA_ID;
-//   }
-
-//   /// @dev Superfluid SuperApp callback
-//   function afterAgreementCreated(
-//       ISuperToken _superToken,
-//       address _agreementClass,
-//       bytes32 _agreementId,
-//       bytes calldata _agreementData,
-//       bytes calldata, //_cbdata
-//       bytes calldata _ctx
-//   )
-//       external
-//       override
-//       onlyHost
-//       onlyExpected(_superToken, _agreementClass)
-//       returns (bytes memory newCtx)
-//   {
-//       ISuperfluid.Context memory decompiledCtx = SF_HOST.decodeCtx(_ctx);
-
-//       // @dev If there is no existing outflow, then create new flow to equal inflow
-//       newCtx = cfaV1Lib.createFlowWithCtx(
-//           newCtx,
-//           _receiver,
-//           _acceptedToken,
-//           inFlowRate
-//       );
-//   }
-
-//   /// @dev Superfluid SuperApp callback
-//   function afterAgreementTerminated(
-//       ISuperToken _superToken,
-//       address _agreementClass,
-//       bytes32, // _agreementId,
-//       bytes calldata, // _agreementData
-//       bytes calldata, // _cbdata,
-//       bytes calldata _ctx
-//   ) external override onlyHost returns (bytes memory newCtx) {
-//       // According to the app basic law, we should never revert in a termination callback
-//       if (!_isSameToken(_superToken) || !_isCFAv1(_agreementClass))
-//           return _ctx;
-//       return _updateOutflow(_ctx);
-//   }
 
     /*///////////////////////////////////////////////////////////////
                           IRM CONFIGURATION
