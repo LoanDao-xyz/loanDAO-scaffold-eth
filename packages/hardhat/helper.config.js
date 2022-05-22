@@ -7,6 +7,9 @@ const config = {
     },
     genesisMembers: [],
   },
+  localhost: {
+    genesisMembers: [],
+  },
 };
 
 module.exports = config;
