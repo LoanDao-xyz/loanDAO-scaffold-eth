@@ -629,9 +629,10 @@ task("setup", "Setup a sandbox environment for an account")
 
     // Send ether to account
     console.log(`📢 Sending 1 Ether to ${args.address}`);
+    const amountToSend = hre.ethers.utils.parseEther("1.0");
     await deployer.sendTransaction({
       to: args.address,
-      value: hre.ethers.utils.parseEther("1.0"),
+      value: amountToSend,
     });
 
     const sf = await Framework.create({
@@ -677,7 +678,7 @@ task("setup", "Setup a sandbox environment for an account")
     await fDAI.mint(account.address, amountToMint);
     console.log("📢 Approving transfers from fDAIx for your account");
     await fDAI.connect(account).approve(fDAIx.address, hre.ethers.constants.MaxUint256);
-    console.log("📢 Upgrading all deployer's fDAI to fDAIx");
+    console.log("📢 Upgrading all your account's fDAI to fDAIx");
     await fDAIx.upgrade({ amount: amountToMint.toHexString() }).exec(account);
     console.log("📢 Approving transfers from fDAIx for your account");
     await fDAIx.approve({ receiver: cbp.address, amount: hre.ethers.constants.MaxUint256.toHexString() }).exec(account);
@@ -707,7 +708,8 @@ task("setup", "Setup a sandbox environment for an account")
       superfluidHost: sf.settings.config.hostAddress,
       fDAI: fDAIAddress,
       fDAIx: fDAIx.address,
-      accountBalance: amountToMint.toString(),
+      accountETHBalande: amountToSend.toString(),
+      accountfDAIxBalance: amountToMint.toString(),
     };
 
     console.log("📢 Account setup");

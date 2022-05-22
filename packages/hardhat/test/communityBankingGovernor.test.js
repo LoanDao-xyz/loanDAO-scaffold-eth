@@ -68,14 +68,16 @@ describe("CommunityBankingGovernor", function() {
       const fDAIx = await sf.loadSuperToken("fDAIx");
       const fDAIAddress = fDAIx.underlyingToken.address;
       const fDAI = await hre.ethers.getContractAt("MockERC20", fDAIAddress, deployer.address);
-      const amountToMint = hre.ethers.utils.parseEther("1000.0");
-      await fDAI.mint(cbp.address, amountToMint);
-      await fDAI.connect(member1).approve(fDAIx.address, hre.ethers.constants.MaxUint256);
-      await fDAIx.upgrade({ amount: amountToMint.toHexString() }).exec(member1);
-      await fDAIx.approve({ receiver: cbp.address, amount: hre.ethers.constants.MaxUint256.toHexString() }).exec(member1);
+      // Add some funds to the pool
+      const baseAmount = hre.ethers.utils.parseEther("1000000.0");
+      await fDAI.mint(deployer.address, baseAmount);
+      await fDAI.approve(fDAIx.address, hre.ethers.constants.MaxUint256);
+      await fDAIx.upgrade({ amount: baseAmount.toHexString() }).exec(deployer);
+      await fDAIx.approve({ receiver: cbp.address, amount: hre.ethers.constants.MaxUint256.toHexString() }).exec(deployer);
+      await fDAIx.transfer({ receiver: cbp.address, amount: baseAmount.toString() }).exec(deployer);
 
       const cbg = await hre.ethers.getContract("CommunityBankingGovernor", member1);
-      return { cbt, cbg, cbp, fDAIx, genesisMembers, nonMembers };
+      return { cbt, cbg, cbp, sf, fDAI, fDAIx, baseAmount, genesisMembers, nonMembers };
     });
 
     it("should correctly follow the governance process to add a new member", async function() {
@@ -112,13 +114,21 @@ describe("CommunityBankingGovernor", function() {
     });
 
     it("should correctly follow the governance process to create a loan", async function() {
-      const { cbg, cbp, fDAIx, genesisMembers } = await setup();
+      const { cbg, cbp, sf, fDAIx, genesisMembers } = await setup();
       const [member1] = genesisMembers;
 
-      // Step 1: Ask the DAO for a loan
+      const amountToBorrow = hre.ethers.utils.parseEther("1.0");
+      // Step 1: Authorize the Pool as flow operator
+      await sf.cfaV1.updateFlowOperatorPermissions({
+        flowOperator: cbp.address,
+        permissions: 5, // Create and Delete
+        flowRateAllowance: amountToBorrow,
+        superToken: fDAIx.address,
+      }).exec(member1);
+
+      // Step 2: Ask the DAO for a loan
       // Create the proposal
-      const amount = hre.ethers.utils.parseEther("1.0");
-      const borrowCalldata = cbp.interface.encodeFunctionData("borrow", [member1.address, amount]);
+      const borrowCalldata = cbp.interface.encodeFunctionData("borrow", [member1.address, amountToBorrow]);
       const tx = await cbg.connect(member1).propose(
         [cbp.address],
         [0],
@@ -128,7 +138,7 @@ describe("CommunityBankingGovernor", function() {
       const receipt = await tx.wait();
       const { proposalId, targets, calldatas, startBlock, endBlock, description } = receipt.events[0].args;
 
-      // Step 2: Other members vote to accept it
+      // Step 3: Other members vote to accept it
       const currentBlockNumber = await hre.ethers.provider.getBlockNumber();
       await hre.timeAndMine.mine(startBlock - currentBlockNumber);
       await hre.network.provider.send("evm_setAutomine", [false]);
@@ -136,11 +146,21 @@ describe("CommunityBankingGovernor", function() {
       await cbg.connect(genesisMembers[1]).castVote(proposalId, 1);
       await hre.network.provider.send("evm_setAutomine", [true]);
 
-      // Step 3: Execute the borrow proposal
+      // Step 4: Execute the borrow proposal
       const currentBlockNumber2 = await hre.ethers.provider.getBlockNumber();
       await hre.timeAndMine.mine(endBlock - currentBlockNumber2 + 1);
-      await expect(cbg.execute(targets, [0], calldatas, hre.ethers.utils.id(description))).to.emit(cbp, "Borrow").withArgs(member1.address, amount);
-      expect(await fDAIx.balanceOf({ account: member1.address })).to.eq(amount)
+
+      const borrowRate = hre.ethers.utils.parseEther("0.02");
+      const expectedParams = {
+        cfType: 1,
+        amount: amountToBorrow,
+        rate: borrowRate,
+        term: 60 * 60 * 24 * 365,
+        target: member1.address,
+      };
+      await expect(cbg.execute(targets, [0], calldatas, hre.ethers.utils.id(description)))
+        .to.emit(cbp, "Borrow")
+        .withArgs(1, Object.values(expectedParams));
     });
   });
 });

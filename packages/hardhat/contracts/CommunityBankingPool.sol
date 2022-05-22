@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.10 <0.9.0;
 
-import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { ERC721, IERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import { ERC721Burnable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
@@ -213,6 +213,37 @@ contract CommunityBankingPool is ERC721, ERC721Enumerable, ERC721Burnable, Ownab
         CFParams memory params = cfParams[cfId];
         uint256 alreadyRepaidAmount = streamedAmount(params.target, address(this));
         return params.amount.subMin0(alreadyRepaidAmount);
+    }
+
+    function transferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
+        CFParams storage params = cfParams[tokenId];
+        // Revert the transfer if the CF is a Loan
+        if (params.cfType == CFType.Loan) {
+            revert ForbiddenTransfer();
+        }
+        // Transfer CF
+        super.transferFrom(from, to, tokenId);
+        // Update the receiver
+        updateCFAReceiver(params, to);
+    }
+
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public override(ERC721, IERC721) {
+        CFParams storage params = cfParams[tokenId];
+        // Revert the transfer if the CF is a Loan
+        if (params.cfType == CFType.Loan) {
+            revert ForbiddenTransfer();
+        }
+        // Transfer CF
+        super.safeTransferFrom(from, to, tokenId, _data);
+        // Update the receiver
+        updateCFAReceiver(params, to);
+    }
+
+    function updateCFAReceiver(CFParams storage params, address newTarget) internal {
+        (, int96 flowRate, ,) = cfaV1.cfa.getFlow(ASSET, address(this), params.target);
+        cfaV1.deleteFlow(address(this), params.target, ASSET);
+        params.target = newTarget;
+        cfaV1.createFlow(newTarget, ASSET, flowRate);
     }
 
     /*///////////////////////////////////////////////////////////////

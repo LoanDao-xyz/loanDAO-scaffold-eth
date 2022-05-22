@@ -26,7 +26,7 @@ async function muteLogs(fn) {
   }
 }
 
-describe.only("CommunityBankingPool", function() {
+describe("CommunityBankingPool", function() {
   // quick fix to let gas reporter fetch data from gas station & coinmarketcap
   before((done) => {
     setTimeout(done, 2000);
@@ -189,6 +189,30 @@ describe.only("CommunityBankingPool", function() {
       expect(await cbp.balanceOf(member1.address)).to.eq(0);
       expect(await fDAIx.balanceOf({ account: member1.address, providerOrSigner: member1 })).to.eq(amountToMint.add(streamedInterests));
       expect(await fDAIx.balanceOf({ account: cbp.address, providerOrSigner: member1 })).to.eq(baseAmount.sub(streamedInterests));
+
+      // Check the Tradeable CashFlow
+      const [member2] = await hre.ethers.getUnnamedSigners();
+      await cbp.connect(member1).deposit(amountToDeposit);
+      const tx2 = await cbp.connect(member1).transferFrom(member1.address, member2.address, 2);
+      await expect(tx2).to.emit(cbp, "Transfer").withArgs(member1.address, member2.address, 2);
+      expect(await cbp.balanceOf(member1.address)).to.eq(0);
+      expect(await cbp.balanceOf(member2.address)).to.eq(1);
+      const flow2 = await sf.cfaV1.getFlow({
+        superToken: fDAIx.address,
+        sender: cbp.address,
+        receiver: member1.address,
+        providerOrSigner: hre.ethers.provider,
+      });
+      expect(flow2.flowRate).to.eq("0");
+      const flow3 = await sf.cfaV1.getFlow({
+        superToken: fDAIx.address,
+        sender: cbp.address,
+        receiver: member2.address,
+        providerOrSigner: hre.ethers.provider,
+      });
+      expect(flow3.flowRate).to.eq(flow.flowRate);
+      await expect(cbp.connect(member2).withdraw(2)).to.emit(cbp, "Withdraw").withArgs(2);
+      expect(await fDAIx.balanceOf({ account: member2.address, providerOrSigner: member2 })).to.be.gt(amountToDeposit);
     });
   });
 
@@ -222,7 +246,7 @@ describe.only("CommunityBankingPool", function() {
       return { cbp, sf, fDAI, fDAIx, deployer, member1, baseAmount };
     });
 
-    it.only("should allow owner to create a loan for borrower", async function() {
+    it("should allow owner to create a loan for borrower", async function() {
       const { cbp, sf, fDAIx, baseAmount, member1 } = await setup();
 
       const amountToBorrow = hre.ethers.utils.parseEther("1000.0");
@@ -255,6 +279,10 @@ describe.only("CommunityBankingPool", function() {
       expect(cfIds.length).to.eq(1);
       expect(params[0].cfType).to.eq(1);
       expect(params[0].amount).to.eq(amountToBorrow);
+      // Check that a loan is not transferable
+      await expect(cbp.connect(member1).transferFrom(member1.address, cbp.address, 1)).to.be.reverted;
+      await expect(cbp.connect(member1)["safeTransferFrom(address,address,uint256)"](member1.address, cbp.address, 1)).to.be.reverted;
+
       // Superfluid takes a 1h deposit up front on escrow on testnets
       // https://docs.superfluid.finance/superfluid/protocol-developers/interactive-tutorials/money-streaming-1#money-streaming
       const flow = await sf.cfaV1.getFlow({
