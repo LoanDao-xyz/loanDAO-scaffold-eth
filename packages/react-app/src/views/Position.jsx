@@ -30,10 +30,12 @@ function Position({ address, tx, readContracts, writeContracts }) {
       const [ids, params] = cashflows;
       const arr = [];
       for (let i = 0; i < ids.length; i++) {
-        const cfId = ids[i].toString();
-        const amount = ethers.utils.formatEther(params[i].amount.toString());
-        const cashflow = { cfId, amount };
-        arr.push(cashflow);
+        if(params[i].cfType == 0) {
+            const cfId = ids[i].toString();
+            const amount = ethers.utils.formatEther(params[i].amount.toString());
+            const cashflow = { cfId, amount };
+            arr.push(cashflow);
+          }
       }
       setCashflowsState(arr);
     }

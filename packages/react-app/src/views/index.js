@@ -6,3 +6,4 @@ export { default as Membership } from "./Membership";
 export { default as Governance } from "./Governance";
 export { default as Loan } from "./Loan";
 export { default as Position } from "./Position";
+export { default as Repay } from "./Repay";
