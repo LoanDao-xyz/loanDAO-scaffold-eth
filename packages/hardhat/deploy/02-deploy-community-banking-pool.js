@@ -58,6 +58,11 @@ async function deployCommunityPool(hre) {
     // Save the Superfluid config to .env
     const dotenvPath = path.join(__dirname, "../.env");
     await fs.writeFile(dotenvPath, `SF_RESOLVER_ADDRESS=${process.env.RESOLVER_ADDRESS}`, { encoding: "utf8" });
+    // Export to the frontend
+    const reactEnvPath = path.join(__dirname, "../../react-app/.env");
+    await fs.writeFile(reactEnvPath,
+      `REACT_APP_SF_RESOLVER=${process.env.RESOLVER_ADDRESS}
+REACT_APP_SF_FDAIX=${fDAIx.address}`);
   } else {
     const c = helperConfig[hre.network.name];
 

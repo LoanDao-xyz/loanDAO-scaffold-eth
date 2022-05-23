@@ -11,6 +11,7 @@ import {
 import { useExchangeEthPrice } from "eth-hooks/dapps/dex";
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, Route, Switch, useLocation } from "react-router-dom";
+import { Framework } from "@superfluid-finance/sdk-core";
 import "./App.css";
 import {
   Account,
@@ -244,6 +245,21 @@ function App(props) {
 
   const faucetAvailable = localProvider && localProvider.connection && targetNetwork.name.indexOf("local") !== -1;
 
+  const [sf, setSF] = useState();
+  useEffect(() => {
+    if (!localProvider) return;
+    async function init() {
+      const superfluidFramework = await Framework.create({
+        chainId: localChainId,
+        provider: localProvider,
+        dataMode: "WEB3_ONLY",
+        resolverAddress: externalContracts[localChainId].contracts.SuperfluidResolver.address,
+      });
+      setSF(superfluidFramework);
+    }
+    init();
+  }, [localProvider]);
+
   return (
     <div className="App">
       {/* ✏️ Edit the header and change the title to your project name */}
@@ -305,7 +321,13 @@ function App(props) {
                 this <Contract/> component will automatically parse your ABI
                 and give you a form to interact with it locally
             */}
-
+          <Button onClick={async () => {
+            const fDAIx = await sf.loadSuperToken("fDAIx");
+            await sf.cfaV1.authorizeFlowOperatorWithFullControl({
+              flowOperator: readContracts["CommunityBankingPool"].address,
+              superToken: fDAIx.address,
+            }).exec(userSigner);
+          }}>Authorize Pool as Flow Operator</Button>
           <Contract
             name="CommunityBankingPool"
             price={price}
@@ -326,6 +348,15 @@ function App(props) {
           />
           <Contract
             name="CommunityBankingGovernor"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            address={address}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          />
+          <Contract
+            name="fDAIx"
             price={price}
             signer={userSigner}
             provider={localProvider}

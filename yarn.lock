@@ -3767,6 +3767,18 @@
     lodash "^4.17.21"
     tsify "^5.0.4"
 
+"@superfluid-finance/sdk-core@^0.4.2":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@superfluid-finance/sdk-core/-/sdk-core-0.4.2.tgz#fbb88a35e4b202e648fe4e360fef825190becf37"
+  integrity sha512-MGO0xuyRWCRgay0SJx2JoIiODsGsKvZov6RLnI4Xapk/sB3E/9Le954hUwE9hkb+Cc9R2YpxenFCDly2KyFVzw==
+  dependencies:
+    ajv "^8.11.0"
+    browserify "^17.0.0"
+    ethers "^5.6.2"
+    graphql-request "^3.7.0"
+    lodash "^4.17.21"
+    tsify "^5.0.4"
+
 "@surma/rollup-plugin-off-main-thread@^1.1.1":
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/@surma/rollup-plugin-off-main-thread/-/rollup-plugin-off-main-thread-1.4.2.tgz#e6786b6af5799f82f7ab3a82e53f6182d2b91a58"

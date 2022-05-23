@@ -14,9 +14,19 @@ export default function Governance({
   contractName,
   eventName,
   localProvider,
-  startBlock,
 }) {
   const [eventsWithState, setEventsWithState] = useState([]);
+  const [startBlock, setStartBlock] = useState(1);
+
+  useEffect(() => {
+    if (!localProvider) return;
+    async function setStart() {
+      const block = (await localProvider.getBlockNumber()) - 1000;
+      setStartBlock(block);
+    }
+    setStart();
+  }, [localProvider]);
+
   // 📟 Listen for broadcast events
   const events = useEventListener(readContracts, contractName, eventName, localProvider, startBlock);
   const tokenAddress =
